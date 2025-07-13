@@ -1,98 +1,254 @@
+# Hello Vector 🚀
+
+A powerful vector-based recommendation engine built with NestJS, PostgreSQL with PGVector, and OpenAI embeddings. This application demonstrates how to build intelligent food recommendation systems using modern vector similarity search.
+
+![NestJS](https://img.shields.io/badge/nestjs-%23E0234E.svg?style=for-the-badge&logo=nestjs&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/postgresql-%23336791.svg?style=for-the-badge&logo=postgresql&logoColor=white)
+![OpenAI](https://img.shields.io/badge/openai-%23412991.svg?style=for-the-badge&logo=openai&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+
+## 🌟 Features
+
+- **Vector-Powered Recommendations**: Uses OpenAI embeddings and PGVector for similarity search
+- **Multiple Recommendation Types**:
+  - 📊 User-based (order history analysis)
+  - 💬 Preference-based (natural language: "spicy chicken with less cheese")
+  - 🔄 Hybrid (combines both approaches)
+- **Auto-Vectorization**: Products are automatically converted to vectors on creation
+- **Scalable Architecture**: Built with NestJS modules and TypeORM
+- **Test Data Generation**: Scripts to generate 1,000 products and 100,000 orders
+- **Docker Ready**: PostgreSQL with PGVector extension included
+
+## 🏗️ Architecture
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Products      │    │   Orders         │    │ Recommendations │
+│                 │    │                  │    │                 │
+│ • Auto-vectorize│    │ • User tracking  │    │ • User-based    │
+│ • CRUD ops      │    │ • Order history  │    │ • Preference    │
+│ • Similarity    │    │ • Analytics      │    │ • Hybrid        │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+          │                       │                       │
+          └───────────────────────┼───────────────────────┘
+                                  │
+                    ┌─────────────────────────┐
+                    │    PostgreSQL           │
+                    │    + PGVector           │
+                    │                         │
+                    │ • Vector storage        │
+                    │ • Similarity search     │
+                    │ • ACID compliance       │
+                    └─────────────────────────┘
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js (v18+)
+- pnpm
+- Docker & Docker Compose
+- OpenAI API Key
+
+### 1. Clone and Setup
+
+```bash
+git clone https://github.com/shmoulana/hello-vector.git
+cd hello-vector
+```
+
+### 2. Environment Configuration
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and add your OpenAI API key:
+```env
+OPENAI_API_KEY=your_openai_api_key_here
+```
+
+### 3. Start Database
+
+```bash
+docker-compose up -d
+```
+
+### 4. Install Dependencies
+
+```bash
+pnpm install
+```
+
+### 5. Start Application
+
+```bash
+pnpm run start:dev
+```
+
+🎉 **Application running at:** `http://localhost:3000`
+
+## 📡 API Endpoints
+
+### Products
+```http
+POST /products              # Create product (auto-vectorized)
+GET  /products              # Get all products
+GET  /products/:id          # Get product by ID
+```
+
+### Orders
+```http
+POST /orders                # Create order
+GET  /orders/user/:userId   # Get user orders
+GET  /orders/user/:userId/history  # Get order history
+```
+
+### Recommendations
+```http
+POST /recommendations/user/:userId        # User-based recommendations
+POST /recommendations/preference          # Preference-based recommendations
+POST /recommendations/hybrid/:userId      # Hybrid recommendations
+```
+
+### Test Data
+```http
+POST /seed/products?count=1000           # Generate test products
+POST /seed/orders?count=100000           # Generate test orders
+POST /seed/all                           # Generate both
+```
+
+## 💡 Usage Examples
+
+### Create a Product
+```bash
+curl -X POST http://localhost:3000/products \
+  -H "Content-Type: application/json" \
+  -d '{
+    "restaurantName": "Mario'\''s Pizza",
+    "productName": "Spicy Margherita",
+    "description": "Wood-fired pizza with spicy tomato sauce, fresh mozzarella, and basil"
+  }'
+```
+
+### Get Preference-Based Recommendations
+```bash
+curl -X POST http://localhost:3000/recommendations/preference \
+  -H "Content-Type: application/json" \
+  -d '{
+    "preference": "less spicy chicken with extra cheese",
+    "limit": 5
+  }'
+```
+
+### Seed Test Data
+```bash
+curl -X POST http://localhost:3000/seed/all
+```
+
+## 🛠️ Technology Stack
+
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| **Backend** | NestJS | API framework with TypeScript |
+| **Database** | PostgreSQL + PGVector | Vector storage and similarity search |
+| **Embeddings** | OpenAI API | Text-to-vector conversion |
+| **ORM** | TypeORM | Database operations and migrations |
+| **Validation** | class-validator | Request validation |
+| **Containerization** | Docker | Database deployment |
+
+## 📊 Data Models
+
+### Product
+```typescript
+{
+  id: number
+  restaurantName: string
+  productName: string
+  description: string
+  embeddingVector: number[]  // 1536-dimensional OpenAI embedding
+  createdAt: Date
+}
+```
+
+### Order
+```typescript
+{
+  id: number
+  userId: string
+  restaurantName: string
+  productName: string
+  quantity: number
+  price: number
+  createdAt: Date
+}
+```
+
+## 🔍 How Recommendations Work
+
+### 1. User-Based Recommendations
+- Analyzes user's order history
+- Creates preference profile from ordered products
+- Finds similar products using vector similarity
+- Filters out already ordered items
+
+### 2. Preference-Based Recommendations
+- Converts natural language preferences to vectors
+- Performs similarity search against product embeddings
+- Returns best matches with similarity scores
+
+### 3. Hybrid Recommendations
+- Combines user history (70% weight) and preferences (30% weight)
+- Removes duplicates and ranks by combined score
+- Provides most comprehensive recommendations
+
+## 🧪 Development
+
+### Run Tests
+```bash
+pnpm run test          # Unit tests
+pnpm run test:e2e      # End-to-end tests
+pnpm run test:cov      # Coverage report
+```
+
+### Code Quality
+```bash
+pnpm run lint          # ESLint
+pnpm run format        # Prettier
+```
+
+### Build for Production
+```bash
+pnpm run build
+pnpm run start:prod
+```
+
+## 📚 Documentation
+
+- **[Setup Guide](./SETUP.md)** - Detailed setup instructions and troubleshooting
+- **[Developer Guide](./CLAUDE.md)** - Architecture and development notes
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is [MIT licensed](LICENSE).
+
+## 🔗 Related Projects
+
+- [NestJS](https://nestjs.com/) - Progressive Node.js framework
+- [PGVector](https://github.com/pgvector/pgvector) - Vector similarity search for PostgreSQL
+- [OpenAI](https://openai.com/) - AI embeddings and language models
+
+---
+
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <strong>Built with ❤️ using modern vector search technology</strong>
 </p>
-
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ pnpm install
-```
-
-## Compile and run the project
-
-```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
